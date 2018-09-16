@@ -15,6 +15,8 @@
  * @license: MIT
  */
 
+var hmacsha1 = require('hmacsha1');
+
 var _timeout = null
 
 var vueJsonp = {
@@ -26,6 +28,10 @@ var vueJsonp = {
       _timeout = options
     }
   }
+}
+
+function fixedEncodeURIComponent (str) {
+  return encodeURIComponent(str).replace(/\*/g, "%252A").replace(/\'/g, "%2527");
 }
 
 /**
@@ -60,13 +66,31 @@ function jsonp (url, params, timeout) {
     delete params.callbackQuery
     delete params.callbackName
 
+    // Pluck out secret (if exists) so we can sign request later
+    var secret = params.secret;
+    if (secret) {
+      // Delete secret from params
+      delete params.secret;
+
+      // Add nonce and timestamp
+      params.nonce = Math.floor((Math.random() * 1000000000) + 1);
+      params.timestamp = Math.floor(Date.now() / 1000);
+    }
+
     // Convert params to querying str.
     var queryStrs = []
-    Object.keys(params).forEach(function (queryName) {
+    Object.keys(params).sort().forEach(function (queryName) {
       queryStrs = queryStrs.concat(formatParams(queryName, params[queryName]))
     })
 
     var queryStr = flatten(queryStrs).join('&')
+
+    // If there was a "secret" in the params, sign request
+    if (secret) {
+      var baseString = 'GET&'+fixedEncodeURIComponent(url)+'&'+fixedEncodeURIComponent(queryStr);
+      console.log(baseString);
+      queryStr += '&signature='+fixedEncodeURIComponent(hmacsha1(atob(secret), baseString));
+    }
 
     // Timeout timer.
     var timeoutTimer = null

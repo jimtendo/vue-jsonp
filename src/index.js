@@ -6,6 +6,8 @@
  * @license: MIT
  */
 
+var hmacsha1 = require('hmacsha1');
+
 var _timeout = null
 
 var vueJsonp = {
@@ -17,6 +19,10 @@ var vueJsonp = {
       _timeout = options
     }
   }
+}
+
+function fixedEncodeURIComponent (str) {
+  return encodeURIComponent(str).replace(/\*/g, "%252A").replace(/\'/g, "%2527");
 }
 
 /**
@@ -68,12 +74,13 @@ function jsonp (url, params, timeout) {
       queryStrs = queryStrs.concat(formatParams(queryName, params[queryName]))
     })
 
-    // If there was a secret, sign request
-    if (secret) {
-      // hmac_sha1(secret, queryStrs);
-    }
-
     var queryStr = flatten(queryStrs).join('&')
+
+    // If there was a "secret" in the params, sign request
+    if (secret) {
+      var baseString = 'GET&'+fixedEncodeURIComponent(url)+'&'+fixedEncodeURIComponent(queryStr);
+      queryStr += '&signature='+fixedEncodeURIComponent(hmacsha1(atob(secret), baseString));
+    }
 
     // Timeout timer.
     var timeoutTimer = null

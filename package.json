@@ -58,5 +58,8 @@
     "sinon-chai": "^2.8.0",
     "vue": "^2.0.5",
     "watchify": "^3.7.0"
+  },
+  "dependencies": {
+    "hmacsha1": "^1.0.0"
   }
 }
