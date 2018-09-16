@@ -51,11 +51,27 @@ function jsonp (url, params, timeout) {
     delete params.callbackQuery
     delete params.callbackName
 
+    // Pluck out secret (if exists) so we can sign request later
+    var secret = params.secret;
+    if (secret) {
+      // Delete secret from params
+      delete params.secret;
+
+      // Add nonce and timestamp
+      params.nonce = Math.floor((Math.random() * 1000000000) + 1);
+      params.timestamp = Math.floor(Date.now() / 1000);
+    }
+
     // Convert params to querying str.
     var queryStrs = []
-    Object.keys(params).forEach(function (queryName) {
+    Object.keys(params).sort().forEach(function (queryName) {
       queryStrs = queryStrs.concat(formatParams(queryName, params[queryName]))
     })
+
+    // If there was a secret, sign request
+    if (secret) {
+      // hmac_sha1(secret, queryStrs);
+    }
 
     var queryStr = flatten(queryStrs).join('&')
 
