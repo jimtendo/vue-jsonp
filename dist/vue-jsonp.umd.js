@@ -31,7 +31,14 @@ var vueJsonp = {
 }
 
 function fixedEncodeURIComponent (str) {
-  return encodeURIComponent(str).replace(/\*/g, "%252A").replace(/\'/g, "%2527");
+
+  // Must follow RFC3629
+  return encodeURIComponent(str)
+         .replace(/\*/g, "%252A")
+         .replace(/\'/g, "%2527")
+         .replace(/\!/g, "%2521")
+         .replace(/\(/g, "%2528")
+         .replace(/\)/g, "%2529");
 }
 
 /**
